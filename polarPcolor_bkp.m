@@ -60,9 +60,9 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 %%  InputParseer
 p = inputParser();
 p.CaseSensitive = false;
-p.addOptional('Ncircles',6);
+p.addOptional('Ncircles',5);
 p.addOptional('autoOrigin','on');
-p.addOptional('Nspokes',9);
+p.addOptional('Nspokes',8);
 p.addOptional('labelR','');
 p.addOptional('RtickLabel',[]);
 p.addOptional('colBar',1);
@@ -143,16 +143,8 @@ thetaMax =max(theta);
 cax = newplot;
 Rrange = rMax - rMin; % get the range for the radius
 [rNorm] = getRnorm(Rscale,Origin,R,Rrange); % getRnorm is a nested function
-        if strcmpi(typeRose,'meteo')
-			YY = (rNorm)'*cosd(theta);
-			XX = (rNorm)'*sind(theta);
-        elseif strcmpi(typeRose,'default')
-			YY = (rNorm)'*cosd(90-theta);
-			XX = (rNorm)'*sind(90-theta);
-        else
-            error('"type" must be "meteo" or "default" ');
-        end
-
+YY = (rNorm)'*cosd(theta);
+XX = (rNorm)'*sind(theta);
 h = pcolor(XX,YY,Z,'parent',cax);
 
 if ~isempty(ncolor)
