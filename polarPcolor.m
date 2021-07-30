@@ -61,20 +61,24 @@ function [varargout] = polarPcolor(R,theta,Z,varargin)
 p = inputParser();
 p.CaseSensitive = false;
 p.addOptional('Ncircles',6);
+p.addOptional('NcirclesFine',51);
 p.addOptional('autoOrigin','on');
 p.addOptional('Nspokes',9);
+p.addOptional('NspokesFine',9);
 p.addOptional('labelR','');
 p.addOptional('RtickLabel',[]);
 p.addOptional('colBar',1);
 p.addOptional('Rscale','linear');
-p.addOptional('colormap','parula');
+p.addOptional('colormap','turbo');
 p.addOptional('ncolor',[]);
 p.addOptional('typeRose','meteo'); % 'meteo' or 'default'
 p.addOptional('circlesPos',[]);
 p.parse(varargin{:});
 
 Ncircles = p.Results.Ncircles;
+NcirclesFine = p.Results.NcirclesFine;
 Nspokes = p.Results.Nspokes ;
+NspokesFine = p.Results.NspokesFine ;
 labelR = p.Results.labelR ;
 RtickLabel = p.Results.RtickLabel ;
 colBar = p.Results.colBar ;
@@ -84,6 +88,7 @@ myColorMap = p.Results.colormap ;
 ncolor = p.Results.ncolor ;
 circPos = p.Results.circlesPos ;
 typeRose = p.Results.typeRose ;
+
 
 
 if ~isempty(circPos)
@@ -170,8 +175,10 @@ if ~ishold(cax);
     % make a radial grid
     hold(cax,'on')
     % Draw circles and spokes
+    createCirclesFine(rMin,rMax,thetaMin,thetaMax,NcirclesFine,circPos)
     createSpokes(thetaMin,thetaMax,Ncircles,circPos,Nspokes);
     createCircles(rMin,rMax,thetaMin,thetaMax,Ncircles,circPos,Nspokes)
+    
 end
 
 %% PLot colorbar if specified
@@ -344,6 +351,63 @@ end
         end
         
     end
+	function createCirclesFine(rMin,rMax,thetaMin,thetaMax,NcirclesFine,circlePos)
+        
+        if isempty(circlePos)
+            if Origin ==0 % if the origin is set at rMin
+                contourD = linspace(0,1+R(1)/Rrange,NcirclesFine);
+            else % if the origin is automatically centered at 0
+                contourD = linspace(0,1,NcirclesFine)+R(1)/Rrange;
+            end
+        else
+            
+            contourD = circlePos-circlePos(1);
+            contourD = contourD./max(contourD)*max(R/Rrange);
+            contourD =[contourD(1:end-1)./contourD(end),1]+R(1)/Rrange;
+        end
+        
+        if isempty(circlePos)
+            if strcmpi(Rscale,'linear')||strcmpi(Rscale,'lin'),
+                tickMesh = linspace(rMin,rMax,NcirclesFine);
+            elseif strcmpi(Rscale,'log')||strcmpi(Rscale,'logarithmic'),
+                tickMesh  = logspace(log10(rMin),log10(rMax),NcirclesFine);
+            else
+                error('''Rscale'' must be ''log'' or ''linear'' ');
+            end
+        else
+            tickMesh  = circlePos;
+            NcirclesFine = numel(tickMesh);
+        end
+        
+
+        % define the grid in polar coordinates
+        
+        
+        if strcmpi(typeRose,'meteo')
+            angleGrid = linspace(90-thetaMin,90-thetaMax,100);
+        elseif strcmpi(typeRose,'default')
+            angleGrid = linspace(thetaMin,thetaMax,100);
+        else
+            error('"type" must be "meteo" or "default" ');
+        end
+        
+        
+        
+        
+        xGrid = cosd(angleGrid);
+        yGrid = sind(angleGrid);
+        
+          
+        % plot circles
+        for kk=1:length(contourD)
+            X = xGrid*contourD(kk);
+            Y = yGrid*contourD(kk);
+            plot(X,Y,'color',[0.45,0.45,0.45],'linewidth',0.5);
+        end
+        % radius tick label
+             
+	end
+
     function [rNorm] = getRnorm(Rscale,Origin,R,Rrange)
         if strcmpi(Rscale,'linear')||strcmpi(Rscale,'lin')
                 rNorm = R-R(1)+Origin;
